@@ -81,6 +81,7 @@ namespace SemiBoombox
             if (GUILayout.Button("Close"))
             {
                 showUI = false;
+                Cursor.lockState = CursorLockMode.Locked;
             }
             GUILayout.EndHorizontal();
 
