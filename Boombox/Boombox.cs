@@ -3,9 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using SemiBoombox.Utils;
-using UnityEngine.Networking;
 using System;
-using System.IO;
 
 namespace SemiBoombox
 {
@@ -63,9 +61,9 @@ namespace SemiBoombox
             {
                 try
                 {
-                    string filePath = await YoutubeDL.DownloadAudioAsync(url);
+                    string filePath = await Task.Run(() => YoutubeDL.DownloadAudioAsync(url));
 
-                    AudioClip clip = await GetAudioClipAsync(filePath);
+                    AudioClip clip = await Task.Run(() => AudioConverter.GetAudioClipAsync(filePath));
 
                     downloadedClips[url] = clip;
                     Debug.Log($"Downloaded and cached clip for url: {url}");
@@ -151,32 +149,6 @@ namespace SemiBoombox
                 }
             }
             return null;
-        }
-
-        public static async Task<AudioClip> GetAudioClipAsync(string filePath)
-        {
-            string uri = "file://" + filePath;
-            using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(uri, AudioType.MPEG))
-            {
-                TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
-                var operation = www.SendWebRequest();
-                operation.completed += (asyncOp) =>
-                {
-                    if (www.result != UnityWebRequest.Result.Success)
-                        tcs.SetException(new Exception($"Failed to load audio file: {www.error}"));
-                    else
-                        tcs.SetResult(true);
-                };
-                await tcs.Task;
-                AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
-
-                if (Directory.Exists(Path.GetDirectoryName(filePath)))
-                {
-                    Directory.Delete(Path.GetDirectoryName(filePath), true);
-                }
-
-                return clip;
-            }
         }
     }
 }

@@ -12,10 +12,8 @@ namespace SemiBoombox.Utils
     {
         private static readonly string baseFolder = Path.Combine(Directory.GetCurrentDirectory(), "SemiBoombox");
         private const string YtDLP_URL = "https://github.com/yt-dlp/yt-dlp/releases/download/2025.02.19/yt-dlp.exe";
-        private const string FFMPEG_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
         private static readonly string ytDlpPath = Path.Combine(baseFolder, "yt-dlp.exe");
         private static readonly string ffmpegFolder = Path.Combine(baseFolder, "ffmpeg");
-        private static readonly string ffmpegBinPath = Path.Combine(ffmpegFolder, "ffmpeg-master-latest-win64-gpl", "bin", "ffmpeg.exe");
 
         public static async Task InitializeAsync()
         {
@@ -24,21 +22,16 @@ namespace SemiBoombox.Utils
                 Directory.CreateDirectory(baseFolder);
             }
 
+            if (Directory.Exists(ffmpegFolder))
+            {
+                Console.WriteLine("Removing deprecated ffmpeg dependency...");
+                Directory.Delete(ffmpegFolder, true);
+            }
+
             if (!File.Exists(ytDlpPath))
             {
                 Console.WriteLine("yt-dlp not found. Downloading...");
                 await DownloadFileAsync(YtDLP_URL, ytDlpPath);
-            }
-
-            if (!Directory.Exists(ffmpegFolder))
-            {
-                Console.WriteLine("ffmpeg not found. Downloading and extracting...");
-                await DownloadAndExtractFFmpegAsync();
-            }
-
-            if (!File.Exists(ffmpegBinPath))
-            {
-                throw new Exception("ffmpeg executable was not found after extraction.");
             }
 
             Console.WriteLine("Initialization complete.");
@@ -49,16 +42,6 @@ namespace SemiBoombox.Utils
             using HttpClient client = new();
             byte[] data = await client.GetByteArrayAsync(url);
             File.WriteAllBytes(destinationPath, data);
-        }
-
-        private static async Task DownloadAndExtractFFmpegAsync()
-        {
-            string zipPath = Path.Combine(baseFolder, "ffmpeg.zip");
-
-            await DownloadFileAsync(FFMPEG_URL, zipPath);
-
-            ZipFile.ExtractToDirectory(zipPath, ffmpegFolder);
-            File.Delete(zipPath);
         }
 
         public static async Task<string> DownloadAudioAsync(string videoUrl)
@@ -74,7 +57,7 @@ namespace SemiBoombox.Utils
             {
                 try
                 {
-                    string command = $"-x --audio-format mp3 --ffmpeg-location \"{ffmpegBinPath}\" --output \"{Path.Combine(tempFolder, "%(title)s.%(ext)s")}\" {videoUrl}";
+                    string command = $"-f \"bestaudio[ext=m4a]\" -o \"{Path.Combine(tempFolder, "%(title)s.%(ext)s")}\" {videoUrl}";
 
                     ProcessStartInfo processInfo = new()
                     {
@@ -102,7 +85,7 @@ namespace SemiBoombox.Utils
                         }
                     }
 
-                    string audioFilePath = Directory.GetFiles(tempFolder, "*.mp3").FirstOrDefault();
+                    string audioFilePath = Directory.GetFiles(tempFolder, "*.m4a").FirstOrDefault();
                     if (audioFilePath == null)
                     {
                         throw new Exception("Audio download failed.");
