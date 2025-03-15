@@ -25,6 +25,9 @@ SemiBoombox is a mod that allows players to stream songs directly from their cha
 - **Dynamic Song Caching:**  
   Downloaded songs are cached for reuse, ensuring smooth playback without unnecessary re-downloads. (In memory, not on disk!)
 
+- **Lightweight Audio Retrieval:**  
+  SemiBoombox uses **yt-dlp** with **NAudio** for fast, efficient audio retrieval and conversion, ensuring a lightweight and smooth experience without heavy dependencies.
+
 ### Disclaimer
 On the first run, SemiBoombox requires a short initialization period to download one dependency: **yt-dlp**. This setup process may take a few moments, but subsequent launches will start up normally without delay.
 
