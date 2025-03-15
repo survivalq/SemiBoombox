@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Photon.Pun;
 
@@ -12,7 +13,11 @@ namespace SemiBoombox
         private string urlInput = "";
         private float volume = 0.15f;
 
-        private Rect windowRect = new(100, 100, 350, 200);
+        // Store name -> URL mapping
+        private Dictionary<string, string> downloadedSongs = [];
+
+        private Rect windowRect = new Rect(100, 100, 400, 500);
+        private Vector2 scrollPosition = Vector2.zero;
         private Boombox boombox;
 
         private void Awake()
@@ -26,6 +31,11 @@ namespace SemiBoombox
             if (Input.GetKeyDown(KeyCode.X))
             {
                 showUI = !showUI;
+                Cursor.visible = showUI;
+                if (showUI)
+                    Cursor.lockState = CursorLockMode.None;
+                else
+                    Cursor.lockState = CursorLockMode.Locked;
             }
         }
 
@@ -77,6 +87,20 @@ namespace SemiBoombox
             }
             GUILayout.EndHorizontal();
 
+            GUILayout.Space(10);
+
+            GUILayout.Label("Downloaded Songs:");
+
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Height(200));
+            foreach (var song in downloadedSongs)
+            {
+                if (GUILayout.Button(song.Key))
+                {
+                    urlInput = song.Value;
+                }
+            }
+            GUILayout.EndScrollView();
+
             GUI.DragWindow();
         }
 
@@ -84,6 +108,14 @@ namespace SemiBoombox
         {
             string pattern = @"^https?:\/\/(www\.)?youtube\.com\/watch\?v=[a-zA-Z0-9_-]+$";
             return Regex.IsMatch(url, pattern);
+        }
+
+        public void AddDownloadedSong(string songName, string url)
+        {
+            if (!downloadedSongs.ContainsKey(songName))
+            {
+                downloadedSongs.Add(songName, url);
+            }
         }
     }
 }

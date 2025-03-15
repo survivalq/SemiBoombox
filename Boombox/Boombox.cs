@@ -18,6 +18,8 @@ namespace SemiBoombox
         // Tracks which players have reported they are ready.
         private static Dictionary<string, HashSet<int>> downloadsReady = new Dictionary<string, HashSet<int>>();
 
+        private BoomboxUI boomboxUI;
+
         private void Awake()
         {
             audioSource = gameObject.AddComponent<AudioSource>();
@@ -44,7 +46,7 @@ namespace SemiBoombox
             if (photonView.IsMine)
             {
                 audioSource.volume = 0.1f;
-                gameObject.AddComponent<BoomboxUI>();
+                boomboxUI = gameObject.AddComponent<BoomboxUI>();
             }
             else
             {
@@ -67,6 +69,8 @@ namespace SemiBoombox
 
                     downloadedClips[url] = clip;
                     Debug.Log($"Downloaded and cached clip for url: {url}");
+
+                    boomboxUI.AddDownloadedSong(clip.name, url);
                 }
                 catch(Exception ex)
                 {
