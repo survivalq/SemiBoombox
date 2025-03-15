@@ -13,9 +13,6 @@ namespace SemiBoombox
         private string urlInput = "";
         private float volume = 0.15f;
 
-        // Store name -> URL mapping
-        private Dictionary<string, string> downloadedSongs = [];
-
         private Rect windowRect = new Rect(100, 100, 400, 500);
         private Vector2 scrollPosition = Vector2.zero;
         private Boombox boombox;
@@ -92,7 +89,7 @@ namespace SemiBoombox
             GUILayout.Label("Downloaded Songs:");
 
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Height(200));
-            foreach (var song in downloadedSongs)
+            foreach (var song in Boombox.downloadedSongs)
             {
                 if (GUILayout.Button(song.Key))
                 {
@@ -108,14 +105,6 @@ namespace SemiBoombox
         {
             string pattern = @"^https?:\/\/(www\.)?youtube\.com\/watch\?v=[a-zA-Z0-9_-]+$";
             return Regex.IsMatch(url, pattern);
-        }
-
-        public void AddDownloadedSong(string songName, string url)
-        {
-            if (!downloadedSongs.ContainsKey(songName))
-            {
-                downloadedSongs.Add(songName, url);
-            }
         }
     }
 }

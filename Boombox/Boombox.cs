@@ -13,10 +13,13 @@ namespace SemiBoombox
         public AudioSource audioSource;
 
         // Caches the AudioClips in memory using the URL as the key.
-        private static Dictionary<string, AudioClip> downloadedClips = new Dictionary<string, AudioClip>();
+        private static Dictionary<string, AudioClip> downloadedClips = [];
 
         // Tracks which players have reported they are ready.
-        private static Dictionary<string, HashSet<int>> downloadsReady = new Dictionary<string, HashSet<int>>();
+        private static Dictionary<string, HashSet<int>> downloadsReady = [];
+
+        // Store name -> URL mapping
+        public static Dictionary<string, string> downloadedSongs = [];
 
         private BoomboxUI boomboxUI;
 
@@ -70,7 +73,7 @@ namespace SemiBoombox
                     downloadedClips[url] = clip;
                     Debug.Log($"Downloaded and cached clip for url: {url}");
 
-                    boomboxUI.AddDownloadedSong(clip.name, url);
+                    AddDownloadedSong(clip.name, url);
                 }
                 catch(Exception ex)
                 {
@@ -153,6 +156,14 @@ namespace SemiBoombox
                 }
             }
             return null;
+        }
+
+        private void AddDownloadedSong(string songName, string url)
+        {
+            if (!downloadedSongs.ContainsKey(songName))
+            {
+                downloadedSongs.Add(songName, url);
+            }
         }
     }
 }
