@@ -51,10 +51,25 @@ namespace SemiBoombox
             GUILayout.Space(10);
 
             GUILayout.Label($"Volume: {Mathf.Round(volume * 100)}%");
-            volume = GUILayout.HorizontalSlider(volume, 0f, 1f);
-            if (boombox.audioSource != null)
+            float newVolume = GUILayout.HorizontalSlider(volume, 0f, 1f);
+            if (newVolume != volume)
             {
-                boombox.audioSource.volume = volume;
+                volume = newVolume;
+
+                // Update local Boombox volume
+                if (boombox.audioSource != null)
+                {
+                    boombox.audioSource.volume = volume;
+                }
+
+                // Update remote Boombox volumes (local client only)
+                foreach (Boombox remoteBoombox in Boombox.GetAllRemoteBoomboxes())
+                {
+                    if (remoteBoombox.audioSource != null)
+                    {
+                        remoteBoombox.audioSource.volume = volume;
+                    }
+                }
             }
 
             GUILayout.Space(10);
