@@ -21,6 +21,8 @@ namespace SemiBoombox
         // Store name -> URL mapping
         public static Dictionary<string, string> downloadedSongs = [];
 
+        private bool isDownloading = false;
+
         private void Awake()
         {
             audioSource = gameObject.AddComponent<AudioSource>();
@@ -60,6 +62,17 @@ namespace SemiBoombox
         {
             Debug.Log($"RequestSong RPC received: url={url}, requesterId={requesterId}");
 
+            if (photonView.IsMine && isDownloading)
+            {
+                Debug.Log("Already downloading a song. Please wait for the current download to finish.");
+                return;
+            }
+
+            if (photonView.IsMine)
+            {
+                isDownloading = true;
+            }
+
             if (!downloadedClips.ContainsKey(url))
             {
                 try
@@ -73,9 +86,10 @@ namespace SemiBoombox
 
                     AddDownloadedSong(clip.name, url);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Debug.LogError($"Failed to download audio: {ex.Message}");
+                    isDownloading = false;
                     return;
                 }
             }
@@ -87,6 +101,11 @@ namespace SemiBoombox
             photonView.RPC("ReportDownloadComplete", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber, url);
             await WaitForAllPlayersReady(url);
             photonView.RPC("SyncPlayback", RpcTarget.All, url, requesterId);
+
+            if (photonView.IsMine)
+            {
+                isDownloading = false;
+            }
         }
 
         [PunRPC]
