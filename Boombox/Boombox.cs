@@ -163,6 +163,20 @@ namespace SemiBoombox
             }
         }
 
+        [PunRPC]
+        public void SyncTime(float time, int requesterId)
+        {
+            if (photonView.Owner != null && photonView.Owner.ActorNumber == requesterId)
+            {
+                if (audioSource.isPlaying)
+                {
+                    audioSource.time = time;
+                }
+
+                Debug.Log($"Syncing time to {time} seconds, requesterId={requesterId}");
+            }
+        }
+
         private static Boombox FindBoomboxForPlayer(int playerId)
         {
             foreach (Boombox boombox in FindObjectsOfType<Boombox>())

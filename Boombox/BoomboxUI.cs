@@ -14,7 +14,11 @@ namespace SemiBoombox
         private string urlFeedback = "";
         private float volume = 0.15f;
 
-        private Rect windowRect = new Rect(100, 100, 400, 500);
+        private float currentPlaybackTime = 0f;
+        private float totalPlaybackTime = 0f;
+        private float playbackSliderValue = 0f;
+
+        private Rect windowRect = new(100, 100, 400, 500);
         private Vector2 scrollPosition = Vector2.zero;
         private Boombox boombox;
 
@@ -30,10 +34,28 @@ namespace SemiBoombox
             {
                 showUI = !showUI;
                 Cursor.visible = showUI;
-                if (showUI)
-                    Cursor.lockState = CursorLockMode.None;
+                Cursor.lockState = showUI ? CursorLockMode.None : CursorLockMode.Locked;
+            }
+            
+            // Update playback times if the audio is playing and a clip is assigned.
+            if (boombox.audioSource != null && boombox.audioSource.clip != null)
+            {
+                if (boombox.audioSource.isPlaying)
+                {
+                    currentPlaybackTime = boombox.audioSource.time;
+                    totalPlaybackTime = boombox.audioSource.clip.length;
+                }
                 else
-                    Cursor.lockState = CursorLockMode.Locked;
+                {
+                    // Optionally, keep the last known time when paused or stopped.
+                    currentPlaybackTime = boombox.audioSource.time;
+                    totalPlaybackTime = boombox.audioSource.clip.length;
+                }
+            }
+            else
+            {
+                currentPlaybackTime = 0f;
+                totalPlaybackTime = 0f;
             }
         }
 
@@ -49,7 +71,7 @@ namespace SemiBoombox
         {
             GUILayout.Label("Enter YouTube URL:");
             urlInput = GUILayout.TextField(urlInput, 200);
-            GUILayout.Label(urlFeedback); // Show feedback message to the user
+            GUILayout.Label(urlFeedback);
 
             GUILayout.Space(10);
 
@@ -72,6 +94,21 @@ namespace SemiBoombox
                     {
                         remoteBoombox.audioSource.volume = volume;
                     }
+                }
+            }
+
+            GUILayout.Space(10);
+
+            GUILayout.Label($"Current Time: {FormatTime(currentPlaybackTime)} / {FormatTime(totalPlaybackTime)}");
+
+            if (boombox.audioSource != null && boombox.audioSource.isPlaying)
+            {
+                playbackSliderValue = GUILayout.HorizontalSlider(currentPlaybackTime, 0f, totalPlaybackTime);
+
+                if (Mathf.Abs(playbackSliderValue - currentPlaybackTime) > 0.1f)
+                {
+                    currentPlaybackTime = playbackSliderValue;
+                    photonView.RPC("SyncTime", RpcTarget.All, currentPlaybackTime, PhotonNetwork.LocalPlayer.ActorNumber);
                 }
             }
 
@@ -120,6 +157,8 @@ namespace SemiBoombox
             GUI.DragWindow();
         }
 
+        #region Helpers
+
         private bool IsValidUrl(string url, out string correctedUrl)
         {
             string pattern = @"^https?:\/\/(www\.)?youtube\.com\/watch\?v=[a-zA-Z0-9_-]+$";
@@ -139,5 +178,13 @@ namespace SemiBoombox
 
             return false;
         }
+
+        private string FormatTime(float seconds)
+        {
+            TimeSpan time = TimeSpan.FromSeconds(seconds);
+            return string.Format("{0:D2}:{1:D2}", time.Minutes, time.Seconds);
+        }
+
+        #endregion
     }
 }
