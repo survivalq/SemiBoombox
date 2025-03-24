@@ -10,9 +10,9 @@ namespace SemiBoombox.Utils
     public static class YoutubeDL
     {
         private static readonly string baseFolder = Path.Combine(Directory.GetCurrentDirectory(), "SemiBoombox");
-        private const string YtDLP_URL = "https://github.com/yt-dlp/yt-dlp/releases/download/2025.02.19/yt-dlp.exe";
+        private const string YTDLP_URL = "https://github.com/yt-dlp/yt-dlp/releases/download/2025.03.21/yt-dlp.exe";
+        private const string YTDLP_VERSION = "2025.03.21";
         private static readonly string ytDlpPath = Path.Combine(baseFolder, "yt-dlp.exe");
-        private static readonly string ffmpegFolder = Path.Combine(baseFolder, "ffmpeg");
 
         public static async Task InitializeAsync()
         {
@@ -21,16 +21,30 @@ namespace SemiBoombox.Utils
                 Directory.CreateDirectory(baseFolder);
             }
 
-            if (Directory.Exists(ffmpegFolder))
+            if (File.Exists(ytDlpPath))
             {
-                Console.WriteLine("Removing deprecated ffmpeg dependency...");
-                Directory.Delete(ffmpegFolder, true);
-            }
+                try
+                {
+                    string fileVersion = await GetYtDlpVersionAsync();
 
-            if (!File.Exists(ytDlpPath))
+                    if (fileVersion != YTDLP_VERSION)
+                    {
+                        Console.WriteLine($"Updating yt-dlp from version {fileVersion} to {YTDLP_VERSION}.");
+                        File.Delete(ytDlpPath);
+                        await DownloadFileAsync(YTDLP_URL, ytDlpPath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error checking yt-dlp version: {ex.Message}");
+                    File.Delete(ytDlpPath);
+                    await DownloadFileAsync(YTDLP_URL, ytDlpPath);
+                }
+            }
+            else
             {
                 Console.WriteLine("yt-dlp not found. Downloading...");
-                await DownloadFileAsync(YtDLP_URL, ytDlpPath);
+                await DownloadFileAsync(YTDLP_URL, ytDlpPath);
             }
 
             Console.WriteLine("Initialization complete.");
@@ -98,6 +112,23 @@ namespace SemiBoombox.Utils
                     throw new Exception($"Error downloading audio: {ex.Message}");
                 }
             });
+        }
+
+        private static async Task<string> GetYtDlpVersionAsync()
+        {
+            ProcessStartInfo versionInfo = new()
+            {
+                FileName = ytDlpPath,
+                Arguments = "--version",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using Process process = Process.Start(versionInfo) ?? throw new Exception("Failed to start yt-dlp process for version check.");
+            string versionOutput = await process.StandardOutput.ReadToEndAsync();
+            process.WaitForExit();
+            return versionOutput.Trim();
         }
     }
 }
