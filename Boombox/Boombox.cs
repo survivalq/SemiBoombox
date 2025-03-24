@@ -21,21 +21,6 @@ namespace SemiBoombox
         // Store name -> URL mapping
         public static Dictionary<string, string> downloadedSongs = [];
 
-        public static List<Boombox> GetAllRemoteBoomboxes()
-        {
-            List<Boombox> remoteBoomboxes = new List<Boombox>();
-            foreach (Boombox boombox in FindObjectsOfType<Boombox>())
-            {
-                if (!boombox.photonView.IsMine)
-                {
-                    remoteBoomboxes.Add(boombox);
-                }
-            }
-            return remoteBoomboxes;
-        }
-
-        private BoomboxUI boomboxUI;
-
         private void Awake()
         {
             audioSource = gameObject.AddComponent<AudioSource>();
@@ -62,7 +47,7 @@ namespace SemiBoombox
             if (photonView.IsMine)
             {
                 audioSource.volume = 0.1f;
-                boomboxUI = gameObject.AddComponent<BoomboxUI>();
+                gameObject.AddComponent<BoomboxUI>();
             }
             else
             {
@@ -159,12 +144,6 @@ namespace SemiBoombox
             }
         }
 
-        [PunRPC]
-        public void SetVolumeRPC(float newVolume)
-        {
-            audioSource.volume = newVolume;
-        }
-
         private static Boombox FindBoomboxForPlayer(int playerId)
         {
             foreach (Boombox boombox in FindObjectsOfType<Boombox>())
@@ -175,6 +154,19 @@ namespace SemiBoombox
                 }
             }
             return null;
+        }
+
+        public static List<Boombox> GetAllRemoteBoomboxes()
+        {
+            List<Boombox> remoteBoomboxes = new List<Boombox>();
+            foreach (Boombox boombox in FindObjectsOfType<Boombox>())
+            {
+                if (!boombox.photonView.IsMine)
+                {
+                    remoteBoomboxes.Add(boombox);
+                }
+            }
+            return remoteBoomboxes;
         }
 
         private void AddDownloadedSong(string songName, string url)
