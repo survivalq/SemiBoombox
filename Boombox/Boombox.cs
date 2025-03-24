@@ -21,6 +21,19 @@ namespace SemiBoombox
         // Store name -> URL mapping
         public static Dictionary<string, string> downloadedSongs = [];
 
+        public static List<Boombox> GetAllRemoteBoomboxes()
+        {
+            List<Boombox> remoteBoomboxes = new List<Boombox>();
+            foreach (Boombox boombox in FindObjectsOfType<Boombox>())
+            {
+                if (!boombox.photonView.IsMine)
+                {
+                    remoteBoomboxes.Add(boombox);
+                }
+            }
+            return remoteBoomboxes;
+        }
+
         private BoomboxUI boomboxUI;
 
         private void Awake()
@@ -144,6 +157,12 @@ namespace SemiBoombox
                     audioSource.Stop();
                 }
             }
+        }
+
+        [PunRPC]
+        public void SetVolumeRPC(float newVolume)
+        {
+            audioSource.volume = newVolume;
         }
 
         private static Boombox FindBoomboxForPlayer(int playerId)
