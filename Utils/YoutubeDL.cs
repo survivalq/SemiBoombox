@@ -10,9 +10,10 @@ namespace SemiBoombox.Utils
     public static class YoutubeDL
     {
         private static readonly string baseFolder = Path.Combine(Directory.GetCurrentDirectory(), "SemiBoombox");
-        private const string YTDLP_URL = "https://github.com/yt-dlp/yt-dlp/releases/download/2025.03.21/yt-dlp.exe";
-        private const string YTDLP_VERSION = "2025.03.21";
+        private const string YTDLP_URL = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe";
         private static readonly string ytDlpPath = Path.Combine(baseFolder, "yt-dlp.exe");
+
+        private static bool _updateCheckDone = false;
 
         public static async Task InitializeAsync()
         {
@@ -21,33 +22,60 @@ namespace SemiBoombox.Utils
                 Directory.CreateDirectory(baseFolder);
             }
 
-            if (File.Exists(ytDlpPath))
+            if (!_updateCheckDone)
             {
-                try
+                if (File.Exists(ytDlpPath))
                 {
-                    string fileVersion = await GetYtDlpVersionAsync();
-
-                    if (fileVersion != YTDLP_VERSION)
+                    try
                     {
-                        Console.WriteLine($"Updating yt-dlp from version {fileVersion} to {YTDLP_VERSION}.");
+                        Console.WriteLine("Updating yt-dlp using the --update command...");
+                        await RunUpdateCommandAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error during yt-dlp self-update: {ex.Message}");
                         File.Delete(ytDlpPath);
                         await DownloadFileAsync(YTDLP_URL, ytDlpPath);
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    Console.WriteLine($"Error checking yt-dlp version: {ex.Message}");
-                    File.Delete(ytDlpPath);
+                    Console.WriteLine("yt-dlp not found. Downloading latest version...");
                     await DownloadFileAsync(YTDLP_URL, ytDlpPath);
                 }
+                _updateCheckDone = true;
+                Console.WriteLine("yt-dlp is up to date.");
             }
-            else
+        }
+
+        private static async Task RunUpdateCommandAsync()
+        {
+            ProcessStartInfo updateInfo = new()
             {
-                Console.WriteLine("yt-dlp not found. Downloading...");
-                await DownloadFileAsync(YTDLP_URL, ytDlpPath);
+                FileName = ytDlpPath,
+                Arguments = "--update",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using Process updateProcess = Process.Start(updateInfo) ?? throw new Exception("Failed to start yt-dlp update process.");
+            await WaitForProcessExit(updateProcess);
+        }
+
+        private static Task WaitForProcessExit(Process process)
+        {
+            var tcs = new TaskCompletionSource<object>();
+            process.EnableRaisingEvents = true;
+            process.Exited += (sender, args) => tcs.TrySetResult(null);
+
+            if (process.HasExited)
+            {
+                tcs.TrySetResult(null);
             }
 
-            Console.WriteLine("Initialization complete.");
+            return tcs.Task;
         }
 
         private static async Task DownloadFileAsync(string url, string destinationPath)
@@ -112,23 +140,6 @@ namespace SemiBoombox.Utils
                     throw new Exception($"Error downloading audio: {ex.Message}");
                 }
             });
-        }
-
-        private static async Task<string> GetYtDlpVersionAsync()
-        {
-            ProcessStartInfo versionInfo = new()
-            {
-                FileName = ytDlpPath,
-                Arguments = "--version",
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using Process process = Process.Start(versionInfo) ?? throw new Exception("Failed to start yt-dlp process for version check.");
-            string versionOutput = await process.StandardOutput.ReadToEndAsync();
-            process.WaitForExit();
-            return versionOutput.Trim();
         }
     }
 }
