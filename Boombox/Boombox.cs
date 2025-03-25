@@ -206,6 +206,9 @@ namespace SemiBoombox
 
         private static bool IsCacheInvalid()
         {
+            if (_boomboxCache == null || _boomboxCache.Count == 0)
+                return true;
+                
             foreach (var entry in _boomboxCache)
             {
                 if (entry.Value == null || entry.Value.gameObject == null)
