@@ -22,6 +22,18 @@ namespace SemiBoombox
         public static Dictionary<string, string> downloadedSongs = [];
 
         private bool isDownloading = false;
+        private static Dictionary<int, Boombox> _boomboxCache = [];
+        public static Dictionary<int, Boombox> BoomboxCache
+        {
+            get
+            {
+                if (IsCacheInvalid())
+                {
+                    RefreshBoomboxCache();
+                }
+                return _boomboxCache;
+            }
+        }
 
         private void Awake()
         {
@@ -189,17 +201,33 @@ namespace SemiBoombox
             return null;
         }
 
-        public static List<Boombox> GetAllRemoteBoomboxes()
+
+        #region Helper Methods
+
+        private static bool IsCacheInvalid()
         {
-            List<Boombox> remoteBoomboxes = new List<Boombox>();
-            foreach (Boombox boombox in FindObjectsOfType<Boombox>())
+            foreach (var entry in _boomboxCache)
             {
-                if (!boombox.photonView.IsMine)
+                if (entry.Value == null || entry.Value.gameObject == null)
                 {
-                    remoteBoomboxes.Add(boombox);
+                    return true;
                 }
             }
-            return remoteBoomboxes;
+            return false;
+        }
+
+        private static void RefreshBoomboxCache()
+        {
+            _boomboxCache.Clear();
+            
+            foreach (Boombox boombox in FindObjectsOfType<Boombox>())
+            {
+                if (boombox.photonView.Owner != null)
+                {
+                    int actorNumber = boombox.photonView.Owner.ActorNumber;
+                    _boomboxCache[actorNumber] = boombox;
+                }
+            }
         }
 
         private void AddDownloadedSong(string songName, string url)
@@ -209,5 +237,7 @@ namespace SemiBoombox
                 downloadedSongs.Add(songName, url);
             }
         }
+
+        #endregion
     }
 }

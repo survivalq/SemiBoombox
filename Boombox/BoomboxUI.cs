@@ -37,7 +37,6 @@ namespace SemiBoombox
                 Cursor.lockState = showUI ? CursorLockMode.None : CursorLockMode.Locked;
             }
             
-            // Update playback times if the audio is playing and a clip is assigned.
             if (boombox.audioSource != null && boombox.audioSource.clip != null)
             {
                 if (boombox.audioSource.isPlaying)
@@ -47,7 +46,6 @@ namespace SemiBoombox
                 }
                 else
                 {
-                    // Optionally, keep the last known time when paused or stopped.
                     currentPlaybackTime = boombox.audioSource.time;
                     totalPlaybackTime = boombox.audioSource.clip.length;
                 }
@@ -80,15 +78,7 @@ namespace SemiBoombox
             if (newVolume != volume)
             {
                 volume = newVolume;
-
-                // Update local Boombox volume
-                if (boombox.audioSource != null)
-                {
-                    boombox.audioSource.volume = volume;
-                }
-
-                // Update remote Boombox volumes (local client only)
-                foreach (Boombox remoteBoombox in Boombox.GetAllRemoteBoomboxes())
+                foreach (Boombox remoteBoombox in Boombox.BoomboxCache.Values)
                 {
                     if (remoteBoombox.audioSource != null)
                     {
