@@ -16,7 +16,10 @@ namespace SemiBoombox
 
         private float currentPlaybackTime = 0f;
         private float totalPlaybackTime = 0f;
-        private float playbackSliderValue = 0f;
+
+        private float lastSyncTime = 0f;
+        private const float SYNC_COOLDOWN = 0.15f;
+        private bool sliderLocked = false;
 
         private Rect windowRect = new(100, 100, 400, 500);
         private Vector2 scrollPosition = Vector2.zero;
@@ -91,13 +94,20 @@ namespace SemiBoombox
 
             GUILayout.Label($"Current Time: {FormatTime(currentPlaybackTime)} / {FormatTime(totalPlaybackTime)}");
 
+            sliderLocked = Time.time - lastSyncTime < SYNC_COOLDOWN;
+
             if (boombox.audioSource != null && boombox.audioSource.isPlaying)
             {
-                playbackSliderValue = GUILayout.HorizontalSlider(currentPlaybackTime, 0f, totalPlaybackTime);
-
-                if (Mathf.Abs(playbackSliderValue - currentPlaybackTime) > 0.1f)
+                GUI.enabled = !sliderLocked;
+                
+                float newSliderValue = GUILayout.HorizontalSlider(currentPlaybackTime, 0f, totalPlaybackTime);
+                
+                GUI.enabled = true;
+                
+                if (!sliderLocked && Mathf.Abs(newSliderValue - currentPlaybackTime) > 0.1f)
                 {
-                    currentPlaybackTime = playbackSliderValue;
+                    lastSyncTime = Time.time;
+                    currentPlaybackTime = newSliderValue;
                     photonView.RPC("SyncTime", RpcTarget.All, currentPlaybackTime, PhotonNetwork.LocalPlayer.ActorNumber);
                 }
             }
