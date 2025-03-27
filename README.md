@@ -8,6 +8,7 @@
   <img src="https://img.shields.io/badge/BepInEx-Required-blue" alt="BepInEx Required">
   <img src="https://img.shields.io/badge/Plugin-Version_1.2.0-brightgreen" alt="Plugin Version">
   <img src="https://img.shields.io/thunderstore/dt/Flopper/SemiBoombox" alt="Downloads">
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License">
 </p>
 
 SemiBoombox is a mod that allows players to stream songs directly from their character. With networked audio playback, everyone in the lobby running the mod can hear the song being played. The user-friendly interface lets you control playback easily using an in-game GUI.
