@@ -142,23 +142,18 @@ namespace SemiBoombox
         [PunRPC]
         public void SyncPlayback(string url, int requesterId)
         {
-            Debug.Log($"SyncPlayback RPC received: url={url}, requesterId={requesterId}");
-
-            Boombox targetBoombox = FindBoomboxForPlayer(requesterId);
-            if (targetBoombox == null)
+            if (photonView.Owner != null && photonView.Owner.ActorNumber == requesterId)
             {
-                Debug.LogError($"No boombox found for player {requesterId}");
-                return;
-            }
+                if (!downloadedClips.ContainsKey(url))
+                {
+                    Debug.LogError($"Clip not found for url: {url}");
+                    return;
+                }
 
-            if (!downloadedClips.ContainsKey(url))
-            {
-                Debug.LogError($"Clip not found for url: {url}");
-                return;
+                audioSource.clip = downloadedClips[url];
+                audioSource.Play();
+                Debug.Log($"SyncPlayback RPC executed: url={url}, requesterId={requesterId}");
             }
-
-            targetBoombox.audioSource.clip = downloadedClips[url];
-            targetBoombox.audioSource.Play();
         }
 
         [PunRPC]
@@ -188,19 +183,6 @@ namespace SemiBoombox
                 Debug.Log($"Syncing time to {time} seconds, requesterId={requesterId}");
             }
         }
-
-        private static Boombox FindBoomboxForPlayer(int playerId)
-        {
-            foreach (Boombox boombox in FindObjectsOfType<Boombox>())
-            {
-                if (boombox.photonView.Owner != null && boombox.photonView.Owner.ActorNumber == playerId)
-                {
-                    return boombox;
-                }
-            }
-            return null;
-        }
-
 
         #region Helper Methods
 
