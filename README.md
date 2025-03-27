@@ -30,7 +30,7 @@ SemiBoombox is a mod that allows players to stream songs directly from their cha
 The first run requires a brief setup to download **yt-dlp**. After that, launches are instant.  
 
 ### 🤝 Contributing  
-Want to add new features to the SemiBoombox mod? Check out the **[SemiBoombox](https://github.com/survivalq/SemiBoombox)** repository and submit a pull request! 🛠️ Make sure to thoroughly test your features before submitting to ensure a smooth experience for everyone 🎵.
+Want to add new features to the SemiBoombox mod? Check out the **[SemiBoombox](https://github.com/survivalq/SemiBoombox)** repository and submit a pull request!  Make sure to thoroughly test your features before submitting to ensure a smooth experience for everyone.
 
 ### Credits 🐐🐐🐐
 Huge thanks to **[StandingBlock](https://github.com/StandingBlock)** for creating the icon and providing invaluable testing and feedback. Absolute legend!
