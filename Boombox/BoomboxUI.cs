@@ -29,6 +29,18 @@ namespace SemiBoombox
         {
             boombox = GetComponent<Boombox>();
             photonView = boombox.photonView;
+
+            // Load saved volume or use default (0.15f)
+            volume = PlayerPrefs.GetFloat("BoomboxVolume", 0.15f);
+
+            // Apply the loaded volume immediately
+            foreach (Boombox remoteBoombox in Boombox.BoomboxCache.Values)
+            {
+                if (remoteBoombox.audioSource != null)
+                {
+                    remoteBoombox.audioSource.volume = volume;
+                }
+            }
         }
 
         private void Update()
@@ -81,6 +93,10 @@ namespace SemiBoombox
             if (newVolume != volume)
             {
                 volume = newVolume;
+                // Save the new volume
+                PlayerPrefs.SetFloat("BoomboxVolume", volume);
+                PlayerPrefs.Save();
+
                 foreach (Boombox remoteBoombox in Boombox.BoomboxCache.Values)
                 {
                     if (remoteBoombox.audioSource != null)
